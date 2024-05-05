@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -14,7 +13,7 @@ struct Node<T> {
     next: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Node<T> {
+impl<T: std::cmp::PartialOrd> Node<T> {
     fn new(t: T) -> Node<T> {
         Node {
             val: t,
@@ -29,13 +28,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: std::cmp::PartialOrd> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: std::cmp::PartialOrd> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -72,10 +71,50 @@ impl<T> LinkedList<T> {
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
 		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+        let mut cursor_a = list_a.start;
+        let mut pre_a = list_a.start;
+        let mut cursor_b = list_b.start;
+        let mut res = 0;
+        if let (Some(a), Some(b)) = (list_a.start, list_b.start) {
+            if unsafe{ (*a.as_ptr()).val > (*b.as_ptr()).val } {
+                cursor_a = list_b.start;
+                pre_a = list_b.start;
+                cursor_b = list_a.start;
+                res = 1;
+            }
+        };
+        loop {
+            match (cursor_a, cursor_b) {
+                (Some(next_a), Some(next_b)) => {
+                    if unsafe{ (*next_a.as_ptr()).val < (*next_b.as_ptr()).val } {
+                        pre_a = cursor_a;
+                        cursor_a = unsafe{ (*next_a.as_ptr()).next }
+                    }
+                    else {
+                        if let Some(pre) = pre_a {
+                            unsafe{ (*pre.as_ptr()).next = cursor_b };
+                            let tmp_b = unsafe{ (*next_b.as_ptr()).next };
+                            unsafe{ (*next_b.as_ptr()).next = cursor_a };
+                            pre_a = cursor_b;
+                            cursor_b = tmp_b;
+                        }
+                        
+                    }
+                },
+                _ => {
+                    if let Some(_) = cursor_b {
+                        if let Some(pre) = pre_a {
+                            unsafe{ (*pre.as_ptr()).next =  cursor_b};
+                        }
+                    }
+                    break;
+                },
+            }
+        }
+        if res == 0 {
+            return list_a;
+        } else {
+            return list_b;
         }
 	}
 }

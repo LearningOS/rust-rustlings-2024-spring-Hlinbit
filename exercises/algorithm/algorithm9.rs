@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -23,7 +22,7 @@ where
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
             count: 0,
-            items: vec![T::default()],
+            items: Vec::<T>::new(),
             comparator,
         }
     }
@@ -37,11 +36,23 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        self.items.push(value);
+        let mut idx = self.count;
+        self.count += 1;
+
+        while idx > 0 {
+            let p_idx = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[p_idx]) {
+                self.items.swap(idx, p_idx);
+                idx = p_idx;
+            } else {
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
-        idx / 2
+        (idx-1) / 2
     }
 
     fn children_present(&self, idx: usize) -> bool {
@@ -49,7 +60,7 @@ where
     }
 
     fn left_child_idx(&self, idx: usize) -> usize {
-        idx * 2
+        idx * 2 + 1
     }
 
     fn right_child_idx(&self, idx: usize) -> usize {
@@ -57,7 +68,17 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
+        if self.children_present(idx) {
+            let left_idx = self.left_child_idx(idx);
+            let left_val = &self.items[left_idx];
+            if self.right_child_idx(idx) < self.count {
+                let right_idx = self.right_child_idx(idx);
+                if  (self.comparator)(&self.items[right_idx], left_val) {
+                    return right_idx;
+                }
+            }
+            return left_idx;
+        }
 		0
     }
 }
@@ -84,8 +105,12 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if !self.is_empty() {
+            self.count -= 1;
+            Some(self.items.remove(0))
+        } else {
+            None
+        }
     }
 }
 
